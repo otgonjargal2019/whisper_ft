@@ -1,0 +1,30 @@
+path,text
+train/tuhain_udriin_shul.wav,тухайн өдрийн шөл
+train/buutsaitai_zutan.wav,бууцайны зутан
+train/huluu_zutan.wav,хулууны зутан
+train/hunchirtai_guriltai_shul.wav,хунчиртай гурилтай шөл
+train/banshtai_shul.wav,банштай шөл.
+train/kimchi_shul.wav,кимчитэй шөл
+train/shoshnii_shul.wav,шошны шөл
+train/haluun_nogoo_ramen.wav,халуун ногоотой рамен
+train/karri_ramen.wav,карри рамен
+train/shine_nogoo_salat.wav,шинэ ногооны салат
+train/niislel_salat.wav,нийслэл салат
+train/burrito.wav,буррито
+train/kimbab.wav,кимбаб
+train/pizza.wav,пицца
+train/budaa.wav,будаа
+train/buuz.wav,бууз
+train/gualish.wav,гуляш
+train/tsuivan.wav,цуйван
+train/baitsaatai_huurga.wav,байцаатай хуурга
+train/undugtei_budaatai_huurga.wav,өндөгтэй будаатай хуурга
+train/dalain_baitsaa_budaatai_huurga.wav,далайн байцаатай будаатай хуурга
+train/buurinhii_maxtai_pasta.wav,бөөрийнхөө махтай паста
+train/kremleg_muugtei_pasta.wav,кремлэг мөөгтэй паста
+train/karri.wav,карри
+train/kotlet.wav,котлет
+train/haluun_nogoo_chiherleg_tahia.wav,халуун ногоотой чихэрлэг тахиа
+train/karri_tahia.wav,карри тахиа
+train/buddha_bowl.wav,будда боул
+train/horkhog.wav,хорхог
