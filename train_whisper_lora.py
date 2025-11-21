@@ -1,84 +1,3 @@
-# from pathlib import Path
-# from datasets import load_dataset
-# from transformers import WhisperProcessor, WhisperForConditionalGeneration, Seq2SeqTrainingArguments, Seq2SeqTrainer, DataCollatorForSeq2Seq
-# from peft import LoraConfig, get_peft_model
-# import soundfile as sf
-# import librosa  
-
-# FOOD_DATA = Path("food_data") 
-
-# # Датаг ачаалах
-# dataset = load_dataset("csv", data_files={"train": "food_data/train.csv", "validation": "food_data/test.csv"})
-
-# # Модель + processor
-# model_name = "openai/whisper-small"
-# processor = WhisperProcessor.from_pretrained(model_name)
-# model = WhisperForConditionalGeneration.from_pretrained(model_name)
-
-# data_collator = DataCollatorForSeq2Seq(
-#     tokenizer=processor.tokenizer,  # зөвхөн tokenizer зааж өгнө
-#     padding=True
-# )
-
-# # LoRA тохиргоо
-# lora_config = LoraConfig(
-#     r=16,
-#     lora_alpha=32,
-#     target_modules=["q_proj","v_proj"],
-#     lora_dropout=0.1,
-#     bias="none",
-#     task_type="SEQ_2_SEQ_LM"
-# )
-# model = get_peft_model(model, lora_config)
-
-# # Datapreprocessing (simple)
-# # def preprocess(batch):
-# #     audio = batch["path"]
-# #     batch["input_features"] = processor(audio, sampling_rate=16000).input_features
-# #     batch["labels"] = processor.tokenizer(batch["text"]).input_ids
-# #     return batch
-
-# def preprocess(batch):
-#     audio_path = FOOD_DATA / batch["path"]
-#     audio, sr = sf.read(audio_path)
-#     if sr != 16000:
-#         audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
-    
-#     # processor-д padding=True зааж өгч байна
-#     batch["input_features"] = processor(
-#         audio, sampling_rate=16000, padding=True
-#     ).input_features
-#     batch["labels"] = processor.tokenizer(batch["text"]).input_ids
-#     return batch
-
-
-# dataset = dataset.map(preprocess)
-
-# # Training аргумент
-# training_args = Seq2SeqTrainingArguments(
-#     output_dir="fine_tuned_food",
-#     per_device_train_batch_size=16,
-#     per_device_eval_batch_size=8,
-#     num_train_epochs=3,
-#     learning_rate=3e-5,
-#     logging_steps=10,
-#     save_strategy="epoch",
-#     fp16=True,
-#     push_to_hub=False
-# )
-
-# trainer = Seq2SeqTrainer(
-#     model=model,
-#     args=training_args,
-#     train_dataset=dataset["train"],
-#     eval_dataset=dataset["validation"],
-#     tokenizer=processor.tokenizer,
-#     data_collator=data_collator,
-# )
-
-# trainer.train()
-
-
 from pathlib import Path
 from datasets import load_dataset
 from transformers import (
@@ -104,14 +23,20 @@ dataset = load_dataset("csv", data_files={
 
 # Processor + Model
 model_name = "openai/whisper-small"
-processor = WhisperProcessor.from_pretrained(model_name)
+processor = WhisperProcessor.from_pretrained(model_name, language="mn", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_name)
+
+# Set language and task for the model
+model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language="mn", task="transcribe")
+model.generation_config.language = "mn"
+model.generation_config.task = "transcribe"
 
 # LoRA
 lora_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
-    target_modules=["q_proj", "v_proj"],
+    r=32, #16 bsan
+    lora_alpha=64, #32 bsan
+    # target_modules=["q_proj", "v_proj"], 
+    target_modules=["q_proj", "v_proj", "k_proj", "out_proj"],
     lora_dropout=0.1,
     bias="none",
 )
@@ -166,22 +91,22 @@ data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
 
 # Training arguments
 training_args = Seq2SeqTrainingArguments(
-    output_dir="fine_tuned_food",
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=2,
-    num_train_epochs=3,
-    learning_rate=1e-3,  # Higher learning rate for LoRA
-    warmup_steps=50,
-    logging_steps=5,
+    output_dir="fine_tuned_food_v2",
+    per_device_train_batch_size=4,  # Increased batch size
+    per_device_eval_batch_size=4,
+    num_train_epochs=10, # 5 bsan
+    learning_rate=1e-4,  # Lower learning rate (was too high!)
+    warmup_steps=100,
+    logging_steps=10,
     save_strategy="epoch",
     eval_strategy="epoch",
     fp16=False,
     push_to_hub=False,
-    gradient_checkpointing=False,  # Disable gradient checkpointing - can cause issues with PEFT
-    predict_with_generate=False,
+    gradient_checkpointing=False,
+    predict_with_generate=True,  # CRITICAL FIX: Enable generation during training
     generation_max_length=225,
     logging_first_step=True,
-    report_to=[],  # Disable wandb/tensorboard
+    report_to=[],
 )
 
 # Trainer
